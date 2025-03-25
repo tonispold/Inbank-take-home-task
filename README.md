@@ -75,4 +75,4 @@ Places for **improvement** for TICKET-101:
   - **Improvement**: To inject EstonianPersonalCodeValidator as a dependency through the constructor, enabling easier testing and mock implementations.
 
 ### 🔧 Fixes to TICKET-101 ###
-Fixes to both of these shortcomings can be found here.
+Fixes to both of these shortcomings can be found [here](https://github.com/tonispold/Inbank-take-home-task/commit/640c9b6825ab0b501c376f99478c734e70365dc6).
