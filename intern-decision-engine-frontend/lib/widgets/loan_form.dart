@@ -26,32 +26,57 @@ class _LoanFormState extends State<LoanForm> {
   int _loanPeriod = 36;
   int _loanAmountResult = 0;
   int _loanPeriodResult = 0;
+  int _suitableLoanPeriod = 0;
   String _errorMessage = '';
 
   // Submit the form and update the state with the loan decision results.
   // Only submits if the form inputs are validated.
   void _submitForm() async {
-    if (_formKey.currentState!.validate()) {
-      final result = await _apiService.requestLoanDecision(
-          _nationalId, _loanAmount, _loanPeriod);
-      setState(() {
-        int tempAmount = int.parse(result['loanAmount'].toString());
-        int tempPeriod = int.parse(result['loanPeriod'].toString());
+  if (_formKey.currentState!.validate()) {
+    final result = await _apiService.requestLoanDecision(
+        _nationalId, _loanAmount, _loanPeriod);
 
-        if (tempAmount <= _loanAmount || tempPeriod > _loanPeriod) {
-          _loanAmountResult = int.parse(result['loanAmount'].toString());
-          _loanPeriodResult = int.parse(result['loanPeriod'].toString());
-        } else {
-          _loanAmountResult = _loanAmount;
-          _loanPeriodResult = _loanPeriod;
+    setState(() {
+      _loanAmountResult = int.parse(result['loanAmount'].toString());
+      _loanPeriodResult = int.parse(result['loanPeriod'].toString());
+      _errorMessage = result['errorMessage'].toString();
+    });
+
+    // If requested amount is too high, find a suitable loan period
+    if (_loanAmount > _loanAmountResult) {
+      int newLoanPeriod = _loanPeriodResult;
+
+      while (_loanAmount > _loanAmountResult && newLoanPeriod < 60) {
+        newLoanPeriod += 6; // Increment by 6 months
+        if (newLoanPeriod > 60) break; // Prevent exceeding max allowed period
+
+        final newResult = await _apiService.requestLoanDecision(
+            _nationalId, _loanAmount, newLoanPeriod);
+
+        int newAmountResult = int.parse(newResult['loanAmount'].toString());
+
+        if (newAmountResult >= _loanAmount) {
+          _suitableLoanPeriod = newLoanPeriod;
+          break;
         }
-        _errorMessage = result['errorMessage'].toString();
-      });
+      }
+
+      // If no valid period is found, set _suitableLoanPeriod to 0
+      if (_suitableLoanPeriod == 0) {
+        _suitableLoanPeriod = 0;
+      }
     } else {
+      _suitableLoanPeriod = 0; // Hide if not needed
+    }
+  } else {
+    setState(() {
       _loanAmountResult = 0;
       _loanPeriodResult = 0;
-    }
+      _suitableLoanPeriod = 0;
+    });
   }
+}
+
 
   // Builds the application form widget.
   // The widget automatically queries the endpoint for the latest data
@@ -175,10 +200,14 @@ class _LoanFormState extends State<LoanForm> {
           Column(
             children: [
               Text(
-                  'Approved Loan Amount: ${_loanAmountResult != 0 ? _loanAmountResult : "--"} €'),
+                  'Approved maximum loan amount with a period of ${_loanPeriodResult != 0 ? _loanPeriodResult : "--"} months: ${_loanAmountResult != 0 ? _loanAmountResult : "--"} €'),
               const SizedBox(height: 8.0),
-              Text(
-                  'Approved Loan Period: ${_loanPeriodResult != 0 ? _loanPeriodResult : "--"} months'),
+              Visibility(
+                visible: _loanAmount > _loanAmountResult, // Show only if needed
+                child: Text(
+                  'Approved loan period with the desired amount of ${_loanAmount != 0 ? _loanAmount : "--"} €: ${_suitableLoanPeriod != 0 ? _suitableLoanPeriod : "--"} months'
+                ),
+              ),
               Visibility(
                   visible: _errorMessage != '',
                   child: Text(_errorMessage, style: errorMedium))
