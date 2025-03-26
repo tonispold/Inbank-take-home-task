@@ -6,6 +6,10 @@ import ee.taltech.inbankbackend.exceptions.InvalidLoanAmountException;
 import ee.taltech.inbankbackend.exceptions.InvalidLoanPeriodException;
 import ee.taltech.inbankbackend.exceptions.InvalidPersonalCodeException;
 import ee.taltech.inbankbackend.exceptions.NoValidLoanException;
+
+import java.time.LocalDate;
+import java.time.Period;
+
 import org.springframework.stereotype.Service;
 
 /**
@@ -20,6 +24,10 @@ public class DecisionEngine {
     // Used to check for the validity of the presented ID code.
     private final EstonianPersonalCodeValidator validator = new EstonianPersonalCodeValidator();
     private int creditModifier = 0;
+    private int estExpectedLifetime = 80;
+    private int latExpectedLifetime = 85;
+    private int litExpectedLifetime = 90;
+    private int expectedLifetime = 0;
 
     /**
      * Calculates the maximum loan amount and period for the customer based on their
@@ -50,6 +58,22 @@ public class DecisionEngine {
             return new Decision(null, null, e.getMessage());
         }
 
+        String country = getCountry(personalCode);
+
+        if (country == "Estonia") {
+            expectedLifetime = estExpectedLifetime - 5;
+        } else if (country == "Latvia") {
+            expectedLifetime = latExpectedLifetime - 5;
+        } else if (country == "Lithuania") {
+            expectedLifetime = litExpectedLifetime - 5;
+        }
+
+        int age = calculateAge(personalCode);
+
+        if (age < 18 || age > expectedLifetime) {
+            throw new NoValidLoanException("Loan was not given due to age restriction!");
+        }
+
         int outputLoanAmount;
         creditModifier = getCreditModifier(personalCode);
 
@@ -69,6 +93,53 @@ public class DecisionEngine {
         }
 
         return new Decision(outputLoanAmount, loanPeriod, null);
+    }
+
+    private int calculateAge(String personalCode) {
+        if (personalCode == null || personalCode.length() != 11) {
+            throw new IllegalArgumentException("Invalid Estonian personal code.");
+        }
+
+        int centuryIndicator = Character.getNumericValue(personalCode.charAt(0));
+        int year = Integer.parseInt(personalCode.substring(1, 3));
+        int month = Integer.parseInt(personalCode.substring(3, 5));
+        int day = Integer.parseInt(personalCode.substring(5, 7));
+
+        // Determine century based on the first digit
+        int century;
+        if (centuryIndicator == 1 || centuryIndicator == 2) {
+            century = 1800;
+        } else if (centuryIndicator == 3 || centuryIndicator == 4) {
+            century = 1900;
+        } else if (centuryIndicator == 5 || centuryIndicator == 6) {
+            century = 2000;
+        } else {
+            throw new IllegalArgumentException("Invalid century indicator in personal code.");
+        }
+
+        int fullYear = century + year;
+        LocalDate birthDate = LocalDate.of(fullYear, month, day);
+        LocalDate today = LocalDate.now();
+
+        return Period.between(birthDate, today).getYears();
+    }
+
+    private String getCountry(String perosnalCode) {
+        // Get the last 4 digits of the ID
+        String lastFourDigits = perosnalCode.substring(perosnalCode.length() - 4);
+        int lastFour = Integer.parseInt(lastFourDigits);
+        String originCountry = "";
+
+        // Check country based on last 4 digits
+        if (lastFour >= 0 && lastFour <= 3000) {
+            originCountry = "Estonia";
+        } else if (lastFour >= 3001 && lastFour <= 6000) {
+            originCountry = "Latvia";
+        } else if (lastFour >= 6001 && lastFour <= 9999) {
+            originCountry = "Lithuania";
+        }
+
+        return originCountry;
     }
 
     /**
