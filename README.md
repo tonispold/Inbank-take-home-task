@@ -1,11 +1,7 @@
 # Inbank-take-home-task
 Inbank Software Engineering Internship 2025 Take Home task
 
-## TICKET-101 ##
-
-This is a validation of TICKET-101 with highlights of how the code works and places for improvement.
-
-### Tech stack: ###
+## Tech stack: ##
 **Backend:** Java Spring Boot with [estonian personal code validator](https://github.com/vladislavgoltjajev/java-personal-code)
 <br>
 **Frontend:** Flutter with Dart
@@ -13,6 +9,21 @@ This is a validation of TICKET-101 with highlights of how the code works and pla
 **Database:** MySQL (MariaDB)
 <br>
 **API Integration:** RESTful API for communication between frontend and backend
+
+## How to run ##
+Now to run the **backend**:
+1. Navigate to the root directory of the backend.
+2. Run `gradle build` to build the application.
+3. Run `java -jar build/libs/inbank-backend-1.0.jar` to start the application
+
+And to run the **frontend**:
+1. Navigate to the root directory of the frontend.
+2. Run `flutter pub get` to install the required dependencies.
+3. Run `flutter run` to start the application in debug mode.
+
+## TICKET-101 ##
+
+This is a validation of TICKET-101 with highlights of how the code works and places for improvement.
 
 ### 📜 Backend review ###
 The backend logic consists of **4 important folders** with key files being:
@@ -75,4 +86,24 @@ Places for **improvement** for TICKET-101:
   - **Improvement**: To inject EstonianPersonalCodeValidator as a dependency through the constructor, enabling easier testing and mock implementations.
 
 ### 🔧 Fixes to TICKET-101 ###
-Fixes to both of these shortcomings can be found [here](https://github.com/tonispold/Inbank-take-home-task/commit/640c9b6825ab0b501c376f99478c734e70365dc6).
+Code changes to both of these shortcomings can be found [here](https://github.com/tonispold/Inbank-take-home-task/commit/640c9b6825ab0b501c376f99478c734e70365dc6).
+
+**How the new logic works?**
+
+- The user sees the approved maximum loan amount regarding the chosen period. This is displayed all the time and changes accordingly with the change of loan period. (**Fix to shortcoming 1**)
+- If the user now changes the loan amount and it scopes outside the maximum loan amount with the chosen period, then the approved loan period with the desired amount pops up. (**Fix to shortcoming 2**)
+- If the user now changes the loan amount back inside the scope of maximum loan amount, then the approved loan period with the desired amount dissapears. It will be only displayed when needed.
+
+
+## TICKET-102 ##
+
+Implement age related restrictions to decision engine. The task states: "No loans should be given if the customer is underage or older than the current expected lifetime of each respectable country minus our maximum loan period." The task also states, that at first, only the baltic scope should be implemented and the personal code is in the same format in all countries and expected lifetimes can be arbitrary.
+
+### 🔧 Implementation of TICKET-102 ###
+
+For simplicity sake, a very primitive logic was added to the backend file `DecisionEngine.java`. Two functions were added:
+
+- **calculateAge** - calculates the users age from the estonian id.
+- **getCountry** - gets the users country from the estonian id. 0000-3000 is Estonia, 3001-6000 is Latvia and 6001-9999 is Lithuania.
+
+You can see the **code changes** [here]().
