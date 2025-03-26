@@ -21,6 +21,8 @@ And to run the **frontend**:
 2. Run `flutter pub get` to install the required dependencies.
 3. Run `flutter run` to start the application in debug mode.
 
+More information about **[frontend](https://github.com/deskrock/intern-decision-engine-frontend)** and **[backend](https://github.com/deskrock/intern-decision-engine-backend)**
+
 ## TICKET-101 ##
 
 This is a validation of TICKET-101 with highlights of how the code works and places for improvement.
@@ -106,4 +108,4 @@ For simplicity sake, a very primitive logic was added to the backend file `Decis
 - **calculateAge** - calculates the users age from the estonian id.
 - **getCountry** - gets the users country from the estonian id. 0000-3000 is Estonia, 3001-6000 is Latvia and 6001-9999 is Lithuania.
 
-You can see the **code changes** [here]().
+You can see the **code changes** [here](https://github.com/tonispold/Inbank-take-home-task/commit/a69e6d8c10a0810a33eb2c1708e999ad19b4132a).
